@@ -7,6 +7,7 @@ Key Features:
 ✅ PDF & DOCX Support – Parses multiple file formats with ease.
 ✅ Machine Learning & NLP – Enhances accuracy using advanced text analysis.
 ✅ User-Friendly UI – Seamlessly integrates into recruitment platforms.
+✅ It has ATS scoring  feature 
 
 Ideal for HR professionals, recruiters, and job portals, this resume parser simplifies candidate shortlisting, making hiring more efficient and data-driven. 🚀
 

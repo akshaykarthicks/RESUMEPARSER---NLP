@@ -41,7 +41,6 @@ The extracted resume details will be displayed in the terminal or saved in a str
 6️⃣ Optional: Run a Web Interface
 If your project includes a web UI, start the Flask/Django server:
     python app.py  # Flask  
-    python manage.py runserver  # Django  
 Access the web interface at http://127.0.0.1:5000/ (Flask) or http://127.0.0.1:8000/ (Django).
 
 That’s it! 🚀 Your Resume Parser is now running. Let me know if you need further setup help!

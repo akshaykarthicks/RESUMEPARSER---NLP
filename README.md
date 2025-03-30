@@ -18,20 +18,25 @@ Follow these steps to set up and run your Resume Parser NLP Project:
 Ensure you have Python installed (preferably Python 3.8+). Then, install the required libraries:
      pip install spacy nltk PyPDF2 python-docx pandas re
       python -m spacy download en_core_web_sm
+
 2️⃣ Clone or Download the Project
 If the project is in a GitHub repository, clone it:
       git clone https://github.com/your-repo/resume-parser.git
       cd resume-parser
+
 3️⃣ Place Resume Files
 Ensure your PDF/DOCX resumes are stored in a designated folder, e.g., resumes/.
+
 
 4️⃣ Run the Resume Parser Script
 Execute the main Python script:
       python resume_parser.py
 This will process the resumes in the folder and extract details.
 
+
 5️⃣ View Parsed Results
 The extracted resume details will be displayed in the terminal or saved in a structured format (CSV, JSON, etc.), depending on the implementation.
+
 
 6️⃣ Optional: Run a Web Interface
 If your project includes a web UI, start the Flask/Django server:

@@ -1,47 +1,111 @@
-Resume Parser – AI-Powered Resume Analyzer
-The Resume Parser NLP Project is an intelligent tool designed to extract and analyze key information from resumes using Natural Language Processing (NLP). Built with spaCy, NLTK, PyPDF2, and regex, this system efficiently processes PDF and DOCX files to identify names, contact details, skills, experience, education, and more.
+# 📄 Resume Parser – AI-Powered Resume Analyzer
 
-Key Features:
-✅ Accurate Resume Parsing – Extracts structured data from unstructured text.
-✅ Keyword Matching – Identifies relevant skills and qualifications.
-✅ PDF & DOCX Support – Parses multiple file formats with ease.
-✅ Machine Learning & NLP – Enhances accuracy using advanced text analysis.
-✅ User-Friendly UI – Seamlessly integrates into recruitment platforms.
-✅ It has ATS scoring  feature 
+The **Resume Parser NLP Project** is a smart application designed to extract and analyze critical details from resumes using **Natural Language Processing (NLP)**. Leveraging technologies like **spaCy**, **NLTK**, **PyPDF2**, and **regex**, it transforms unstructured resume data into structured, actionable insights — ideal for ATS (Applicant Tracking Systems) and recruitment automation.
 
-Ideal for HR professionals, recruiters, and job portals, this resume parser simplifies candidate shortlisting, making hiring more efficient and data-driven. 🚀
+---
 
+## 🚀 Key Features
 
-How to Run the Resume Parser NLP Project
-Follow these steps to set up and run your Resume Parser NLP Project:
+✅ **Accurate Resume Parsing** – Extracts name, contact info, skills, experience, education, and more  
+✅ **Keyword Matching** – Matches candidate skills against job-relevant keywords  
+✅ **PDF & DOCX Support** – Supports multiple file types  
+✅ **Machine Learning & NLP** – Enhances extraction accuracy using advanced models  
+✅ **User-Friendly UI** – Simple web interface for uploading and analyzing resumes  
+✅ **ATS Scoring** – Ranks candidates using relevance scoring system  
 
-1️⃣ Install Dependencies
-Ensure you have Python installed (preferably Python 3.8+). Then, install the required libraries:
-     pip install spacy nltk PyPDF2 python-docx pandas re
-      python -m spacy download en_core_web_sm
+---
 
-2️⃣ Clone or Download the Project
-If the project is in a GitHub repository, clone it:
-      git clone https://github.com/your-repo/resume-parser.git
-      cd resume-parser
+## 🛠 Tech Stack
 
-3️⃣ Place Resume Files
-Ensure your PDF/DOCX resumes are stored in a designated folder, e.g., resumes/.
+- **Python 3.8+**
+- **spaCy** (with `en_core_web_sm`)
+- **NLTK**
+- **PyPDF2**
+- **python-docx**
+- **Pandas**
+- **Regex**
+- *(Optional UI: Flask / Streamlit)*
 
+---
 
-4️⃣ Run the Resume Parser Script
-Execute the main Python script:
-      python resume_parser.py
-This will process the resumes in the folder and extract details.
+## 📦 Installation & Setup
 
+### 1️⃣ Install Python Dependencies
+```bash
+pip install spacy nltk PyPDF2 python-docx pandas
+python -m spacy download en_core_web_sm
+```
 
-5️⃣ View Parsed Results
-The extracted resume details will be displayed in the terminal or saved in a structured format (CSV, JSON, etc.), depending on the implementation.
+### 2️⃣ Clone or Download the Project
+```bash
+git clone https://github.com/your-username/resume-parser.git
+cd resume-parser
+```
 
+### 3️⃣ Prepare Resume Files
+Store PDF and DOCX files in a `resumes/` folder (create it if it doesn't exist).
 
-6️⃣ Optional: Run a Web Interface
-If your project includes a web UI, start the Flask/Django server:
-    python app.py  # Flask  
-Access the web interface at http://127.0.0.1:5000/ (Flask) or http://127.0.0.1:8000/ (Django).
+---
 
-That’s it! 🚀 Your Resume Parser is now running. Let me know if you need further setup help!
+## ▶️ Running the Resume Parser
+
+### 🔹 Run via Terminal
+```bash
+python resume_parser.py
+```
+This script will parse all resumes in the folder and print or save structured output (CSV/JSON).
+
+---
+
+## 🌐 Optional: Launch Web UI
+
+If your project includes a web interface:
+
+### 🔹 Run Flask App
+```bash
+python app.py
+```
+
+Then open [http://127.0.0.1:5000](http://127.0.0.1:5000) in your browser.
+
+### 🔹 Or Run Streamlit App
+```bash
+streamlit run app.py
+```
+
+Then open the local URL provided in your terminal.
+
+---
+
+## 📊 Output Format
+
+Parsed data includes:
+
+- **Full Name**
+- **Email & Phone**
+- **Skills (matched & extracted)**
+- **Years of Experience**
+- **Education Details**
+- **ATS Score**
+
+Results can be saved as CSV/JSON depending on implementation.
+
+---
+
+## 👥 Ideal For
+
+- Recruiters & HR teams  
+- Job Portals  
+- ATS Developers  
+- Resume Screening Tools
+
+---
+
+## 📝 License
+
+MIT License. Feel free to modify and use in commercial or personal projects.
+
+---
+
+Made with ❤️ by Akshay Karthick  
+🔗 [LinkedIn](https://www.linkedin.com/in/akshay-karthick-32817a249/) | [GitHub](https://github.com/akshaykarthicks)

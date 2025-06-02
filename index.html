@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Analyzer Pro</title>
+    <style>
+        :root {
+            --primary-color: #ffffff;
+            --secondary-color: #f8f9fa;
+            --accent-color: #2c3e50;
+            --text-color: #1a1a1a;
+            --border-color: #e9ecef;
+            --hover-color: #34495e;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            --hover-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 300px;
+            background-color: var(--primary-color);
+            padding: 2.5rem 2rem;
+            overflow-y: auto;
+            position: fixed;
+            left: -300px;
+            top: 0;
+            height: 100%;
+            transition: all 0.3s ease-in-out;
+            z-index: 1000;
+            border-right: 1px solid var(--border-color);
+            box-shadow: var(--card-shadow);
+        }
+
+        .sidebar.open {
+            left: 0;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            margin-left: 0;
+            transition: margin-left 0.3s ease-in-out;
+        }
+
+        .main-content.sidebar-open {
+            margin-left: 300px;
+        }
+
+        .top-bar {
+            background-color: var(--primary-color);
+            padding: 2.5rem 2rem;
+            box-shadow: var(--card-shadow);
+            border-bottom: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .top-bar-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .top-bar h2 {
+            color: var(--accent-color);
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.2rem;
+            font-weight: 400;
+        }
+
+        .content-area {
+            flex: 1;
+            display: flex;
+            padding: 2rem;
+            gap: 2rem;
+        }
+
+        .preview-pane,
+        .results-pane {
+            flex: 1;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-color) var(--primary-color);
+        }
+
+        h1,
+        h2,
+        h3,
+        ul {
+            margin-bottom: 1rem;
+            color: black;
+        }
+
+        .sidebar h1,
+        .sidebar h2,
+        .sidebar h3 {
+            color: black;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--accent-color);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-danger {
+            background-color: #e74c3c;
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+        .card {
+            background-color: var(--primary-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            padding: 1.8rem;
+            margin-bottom: 1.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .skill-tag {
+            display: inline-block;
+            background-color: var(--accent-color);
+            color: #ffffff;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.875rem;
+            margin: 0.25rem;
+            transition: all 0.2s ease;
+        }
+
+        .skill-tag:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-input-wrapper label {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--accent-color);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #previewFrame {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .sandwich-bar {
+            cursor: pointer;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            width: 30px;
+            height: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .sandwich-bar span {
+            width: 100%;
+            height: 2px;
+            background-color: var(--accent-color);
+            transition: all 0.3s ease-in-out;
+        }
+
+        .sandwich-bar.open {
+            transform: rotate(180deg);
+        }
+
+        .sandwich-bar.open span:nth-child(1) {
+            transform: rotate(45deg) translate(7px, 7px);
+        }
+
+        .sandwich-bar.open span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .sandwich-bar.open span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -7px);
+        }
+
+        .footer {
+            background-color: var(--primary-color);
+            text-align: center;
+            padding: 1.5rem;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+            color: var(--accent-color);
+            border-top: 1px solid var(--border-color);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+
+            .content-area {
+                flex-direction: column;
+            }
+
+            .footer-links {
+                display: flex;
+                justify-content: center;
+                gap: 1rem;
+                margin-top: 0.5rem;
+            }
+
+            .footer a {
+                color: var(--accent-color);
+                text-decoration: none;
+                transition: color 0.3s ease;
+            }
+
+            .footer a:hover {
+                color: var(--secondary-color);
+            }
+        }
+
+        .upload-card {
+            background: var(--primary-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            padding: 3.5rem;
+            text-align: center;
+            max-width: 650px;
+            margin: 3rem auto;
+            transition: all 0.3s ease;
+        }
+
+        .upload-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .upload-icon {
+            margin-bottom: 1.5rem;
+            color: var(--accent-color);
+        }
+
+        .upload-card h2 {
+            color: var(--accent-color);
+            margin-bottom: 1.2rem;
+            font-size: 2rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        .upload-card p {
+            color: #666;
+            margin-bottom: 2.5rem;
+            font-size: 1.1rem;
+        }
+
+        .upload-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .file-input-wrapper.centered {
+            margin: 0 auto;
+        }
+
+        .upload-btn {
+            background: var(--accent-color);
+            color: white;
+            padding: 1rem 2.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 2px solid var(--accent-color);
+        }
+
+        .upload-btn:hover {
+            background-color: var(--hover-color);
+            transform: translateY(-2px);
+        }
+
+        .analyze-btn {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 1rem 2.5rem;
+            font-weight: 500;
+            min-width: 220px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .analyze-btn:hover {
+            background-color: var(--hover-color);
+            transform: translateY(-2px);
+        }
+
+        .card {
+            animation: fadeInUp 0.5s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .card:nth-child(2) { animation-delay: 0.1s; }
+        .card:nth-child(3) { animation-delay: 0.2s; }
+        .card:nth-child(4) { animation-delay: 0.3s; }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .results-pane::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .results-pane::-webkit-scrollbar-track {
+            background: var(--primary-color);
+        }
+
+        .results-pane::-webkit-scrollbar-thumb {
+            background-color: var(--accent-color);
+            border-radius: 4px;
+        }
+
+        .footer-links a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--hover-color);
+        }
+
+        .sandwich-bar span {
+            background-color: var(--accent-color);
+            height: 2px;
+        }
+
+        .upload-content {
+            max-width: 500px;
+            margin: 0 auto 2rem;
+        }
+
+        .upload-headline {
+            color: var(--accent-color);
+            font-size: 1.3rem;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+        }
+
+        .upload-description {
+            color: #4a5568;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .upload-features {
+            list-style: none;
+            padding: 0;
+            margin: 0 auto;
+            text-align: left;
+            max-width: 400px;
+        }
+
+        .upload-features li {
+            color: #2d3748;
+            font-size: 1.05rem;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            line-height: 1.4;
+        }
+
+        .file-hint {
+            color: #718096;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .upload-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: var(--accent-color);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 2px solid var(--accent-color);
+        }
+
+        .upload-btn:hover {
+            background-color: var(--hover-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .analyze-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 1.1rem;
+            padding: 1.2rem 2.8rem;
+            margin-top: 1rem;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .upload-features li {
+            animation: fadeIn 0.5s ease-out forwards;
+            opacity: 0;
+        }
+
+        .upload-features li:nth-child(1) { animation-delay: 0.2s; }
+        .upload-features li:nth-child(2) { animation-delay: 0.4s; }
+        .upload-features li:nth-child(3) { animation-delay: 0.6s; }
+        .upload-features li:nth-child(4) { animation-delay: 0.8s; }
+
+        .sidebar h1 {
+            color: var(--accent-color);
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+            letter-spacing: -0.5px;
+        }
+
+        .sidebar .form-group {
+            margin-bottom: 2rem;
+        }
+
+        .sidebar .form-group label {
+            display: block;
+            color: var(--accent-color);
+            font-weight: 500;
+            margin-bottom: 0.8rem;
+            font-size: 1.1rem;
+        }
+
+        .sidebar .file-input-wrapper {
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        .sidebar .file-input-wrapper label {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: var(--accent-color);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar .file-input-wrapper label:hover {
+            background-color: var(--hover-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar h3 {
+            color: var(--accent-color);
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 2rem 0 1rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            background: var(--secondary-color);
+            padding: 0.8rem 1rem;
+            border-radius: 6px;
+            margin-bottom: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar ul li:hover {
+            transform: translateX(5px);
+            background: #f0f2f5;
+        }
+
+        .sidebar ul li span {
+            color: var(--text-color);
+            font-size: 0.95rem;
+        }
+
+        .sidebar .btn-danger {
+            background-color: #dc3545;
+            border: none;
+            width: 100%;
+            padding: 0.8rem;
+            margin-top: 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar .btn-danger:hover {
+            background-color: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.2);
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: var(--primary-color);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background-color: var(--accent-color);
+            border-radius: 3px;
+        }
+
+        .upload-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin: 2rem 0 3rem;
+        }
+
+        .feature-item {
+            text-align: center;
+            padding: 1.5rem;
+            background: var(--secondary-color);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-item:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--card-shadow);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-item h3 {
+            color: var(--accent-color);
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-item p {
+            color: #666;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .upload-section {
+            background: var(--secondary-color);
+            padding: 2rem;
+            border-radius: 12px;
+            margin-top: 2rem;
+        }
+
+        .upload-btn {
+            background: var(--accent-color);
+            color: white;
+            padding: 1.2rem 2.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .analyze-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            font-size: 1.1rem;
+            padding: 1.2rem 3rem;
+            margin-top: 1.5rem;
+            background: var(--accent-color);
+            transition: all 0.3s ease;
+        }
+
+        .analyze-btn:hover, .upload-btn:hover {
+            background: var(--hover-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .features-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .top-bar h2 {
+                font-size: 2rem;
+            }
+            
+            .subtitle {
+                font-size: 1.1rem;
+            }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: var(--primary-color);
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 12px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: var(--accent-color);
+        }
+
+        .analysis-section {
+            margin-bottom: 2rem;
+        }
+
+        .analysis-section h3 {
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .analysis-item {
+            background: var(--secondary-color);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .analysis-card {
+            background: var(--primary-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .ats-score {
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto;
+            position: relative;
+            background: conic-gradient(var(--accent-color) var(--progress), #eee var(--progress));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .score-inner {
+            background: white;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+        
+        .feedback-list {
+            margin-top: 1.5rem;
+        }
+        
+        .feedback-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background: var(--secondary-color);
+            border-radius: 6px;
+        }
+        
+        .word-cloud {
+            width: 100%;
+            height: 300px;
+            margin-top: 1rem;
+            background: var(--primary-color);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .word-cloud text {
+            transition: all 0.2s ease;
+        }
+
+        .word-cloud text:hover {
+            opacity: 0.7;
+        }
+
+        .skill-tag {
+            display: inline-block;
+            background-color: var(--accent-color);
+            color: #ffffff;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.875rem;
+            margin: 0.25rem;
+            transition: all 0.2s ease;
+        }
+
+        .skill-tag:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--accent-color);
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .metric-card {
+            background: var(--primary-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin: 0.5rem 0;
+        }
+
+        .metric-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #eee;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent-color);
+            transition: width 0.5s ease;
+        }
+
+        .modal-content {
+            width: 90%;
+            max-width: 1400px;
+            padding: 2rem;
+            margin: 2% auto;
+        }
+
+        .analysis-container {
+            display: flex;
+            gap: 2rem;
+            margin-top: 2rem;
+            height: calc(90vh - 100px);
+        }
+
+        .analysis-left {
+            flex: 1;
+            overflow-y: auto;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .analysis-right {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .profile-summary {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .profile-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-item {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        .analysis-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .ats-card {
+            background: linear-gradient(145deg, #ffffff, #f8f9fa);
+        }
+
+        .section-content {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            color: var(--accent-color);
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #eee;
+        }
+
+        .section-item {
+            padding: 0.8rem;
+            border-left: 3px solid var(--accent-color);
+            background: #f8f9fa;
+            margin-bottom: 0.8rem;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .feedback-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.8rem;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            border-left: 3px solid var(--accent-color);
+        }
+
+        @media (max-width: 1024px) {
+            .analysis-container {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .analysis-left, .analysis-right {
+                width: 100%;
+            }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-cloud@1.2.5/build/d3.layout.cloud.min.js"></script>
+</head>
+
+<body>
+    <div class="sandwich-bar" onclick="toggleSidebar()">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <h1>Resume Analyzer</h1>
+            <form method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="pdf_files">Upload Resumes</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="pdf_files" name="pdf_files" accept=".pdf" multiple required>
+                        <label for="pdf_files">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="17 8 12 3 7 8"/>
+                                <line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                            Choose Files
+                        </label>
+                    </div>
+                    <button type="submit" class="btn" style="width: 100%;">Analyze Resumes</button>
+                </div>
+            </form>
+            
+            {% if uploaded_pdfs %}
+            <div>
+                <h3>Uploaded Resumes</h3>
+                <ul>
+                    {% for pdf in uploaded_pdfs %}
+                    <li>
+                        <span>{{ pdf }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <form method="POST" action="{{ url_for('clear_uploads') }}">
+                    <button type="submit" class="btn btn-danger">Clear All Uploads</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content" id="mainContent">
+            <div class="top-bar">
+                <div class="top-bar-content">
+                    <h2>Resume Parser Pro</h2>
+                    <p class="subtitle">Intelligent Resume Analysis & Candidate Screening</p>
+                </div>
+            </div>
+            <div class="content-area">
+                {% if not results %}
+                <!-- Upload Card shown when no resumes are analyzed -->
+                <div class="upload-card">
+                    <div class="upload-header">
+                        <div class="upload-icon">
+                            <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="17 8 12 3 7 8"/>
+                                <line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                        </div>
+                        <h2>Smart Resume Analysis</h2>
+                        <p class="upload-headline">Streamline Your Recruitment Process</p>
+                    </div>
+                    <div class="upload-content">
+                        <div class="features-grid">
+                            <div class="feature-item">
+                                <div class="feature-icon">📊</div>
+                                <h3>Instant Analysis</h3>
+                                <p>Process multiple resumes simultaneously with AI-powered parsing</p>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-icon">🎯</div>
+                                <h3>Skill Matching</h3>
+                                <p>Automatically identify and categorize candidate skills</p>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-icon">⚡</div>
+                                <h3>Quick Screening</h3>
+                                <p>Save hours of manual resume screening time</p>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-icon">📈</div>
+                                <h3>Smart Insights</h3>
+                                <p>Get detailed candidate profiles and comparisons</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="upload-section">
+                        <form method="POST" enctype="multipart/form-data" class="upload-form">
+                            <div class="file-input-wrapper centered">
+                                <input type="file" id="pdf_files" name="pdf_files" accept=".pdf" multiple required>
+                                <label for="pdf_files" class="upload-btn">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="17 8 12 3 7 8"/>
+                                        <line x1="12" y1="3" x2="12" y2="15"/>
+                                    </svg>
+                                    Select Resume Files
+                                </label>
+                            </div>
+                            <p class="file-hint">Supported formats: PDF (Max 10 MB per file)</p>
+                            <button type="submit" class="btn analyze-btn">
+                                <span>Start Analysis</span>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <!-- Existing preview and results panes -->
+                <div class="preview-pane">
+                    <iframe id="previewFrame" src="about:blank"></iframe>
+                </div>
+                <div class="results-pane">
+                    <div style="height: 100%; overflow-y: auto; padding: 1.5rem;">
+                        <h3>Candidate Profiles</h3>
+                        {% for result in results %}
+                        <div class="card">
+                            <h4>{{ result['name'] }}</h4>
+                            {% if result['emails'] %}
+                            <p><strong>Email:</strong> {{ result['emails'][0] }}</p>
+                            {% endif %}
+                            {% if result['phone_number'] %}
+                            <p><strong>Phone:</strong> {{ result['phone_number'] }}</p>
+                            {% endif %}
+                            {% if result['skills'] %}
+                            <div>
+                                <strong>Skills:</strong>
+                                <div style="margin-top: 0.5rem;">
+                                    {% for skill in result['skills'] %}
+                                    <span class="skill-tag">{{ skill }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                            <div class="button-group" style="display: flex; gap: 1rem; margin-top: 1rem;">
+                                <button onclick="showPreview('{{ url_for('uploaded_file', filename=result['filename']) }}')"
+                                    class="btn" style="flex: 1;">View Resume</button>
+                                <button onclick="showDetailedAnalysis('{{ result['filename'] }}')"
+                                    class="btn btn-primary" style="flex: 1;">Detailed Analysis</button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Updated Footer -->
+            <div class="footer">
+                <p>&copy; 2024 Resume Analyzer Pro. All rights reserved.</p>
+                <div class="footer-links">
+                    <a href="https://www.techinterviewhandbook.org/" target="_blank" rel="noopener noreferrer">Tech
+                        Interview Handbook</a>
+                    <a href="https://careerguidanceashwin.com/" target="_blank" rel="noopener noreferrer">Career
+                        Guidance</a>
+                    <a href="https://resumegenius.com/blog/resume-help/resume-tips" target="_blank"
+                        rel="noopener noreferrer">Resume Tips</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="analysisModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Detailed Analysis</h2>
+            <div class="analysis-container">
+                <!-- Left Side - Resume Information -->
+                <div class="analysis-left">
+                    <div class="profile-summary">
+                        <div class="profile-header">
+                            <h3>Profile Summary</h3>
+                            <div class="profile-stats">
+                                <div class="stat-item">
+                                    <div class="stat-label">Experience</div>
+                                    <div class="stat-value" id="expValue">0 Years</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Education</div>
+                                    <div class="stat-value" id="eduValue">Not Specified</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="resumeContent"></div>
+                </div>
+
+                <!-- Right Side - Analytics -->
+                <div class="analysis-right">
+                    <!-- ATS Score Card -->
+                    <div class="analysis-card ats-card">
+                        <h3>ATS Compatibility</h3>
+                        <div class="ats-score">
+                            <div class="score-circle">
+                                <div class="score-inner">
+                                    <span id="atsScore">0%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="feedback-list" id="atsFeedback"></div>
+                    </div>
+
+                    <!-- Skills Distribution -->
+                    <div class="analysis-card">
+                        <h3>Skills Distribution</h3>
+                        <div class="chart-container">
+                            <canvas id="skillsChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Word Cloud -->
+                    <div class="analysis-card">
+                        <h3>Key Terms Analysis</h3>
+                        <div id="wordCloud" class="word-cloud"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="loading-overlay" id="loadingOverlay">
+                <div class="loading-spinner"></div>
+                <p>Analyzing Resume...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showPreview(src) {
+            var previewFrame = document.getElementById('previewFrame');
+            previewFrame.src = src;
+            previewFrame.onload = function () {
+                if (previewFrame.contentDocument.body.innerHTML.includes("File not found")) {
+                    alert("Resume not found. The file may have been deleted or not uploaded correctly.");
+                    previewFrame.src = "about:blank";
+                }
+            };
+        }
+
+        function toggleSidebar() {
+            var sidebar = document.getElementById('sidebar');
+            var mainContent = document.getElementById('mainContent');
+            var sandwichBar = document.querySelector('.sandwich-bar');
+
+            sidebar.classList.toggle('open');
+            mainContent.classList.toggle('sidebar-open');
+            sandwichBar.classList.toggle('open');
+        }
+
+        function showDetailedAnalysis(filename) {
+            const modal = document.getElementById('analysisModal');
+            const resumeContent = document.getElementById('resumeContent');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            
+            // Destroy existing chart if it exists
+            const existingChart = Chart.getChart('skillsChart');
+            if (existingChart) {
+                existingChart.destroy();
+            }
+            
+            modal.style.display = "block";
+            loadingOverlay.style.display = "flex";
+            resumeContent.innerHTML = '';
+            
+            fetch(`/detailed_analysis/${filename}`)
+                .then(response => response.json())
+                .then(data => {
+                    loadingOverlay.style.display = "none";
+                    
+                    // Update Profile Stats
+                    document.getElementById('expValue').textContent = `${data.summary_stats.total_experience_years} Years`;
+                    document.getElementById('eduValue').textContent = data.summary_stats.education_level;
+                    
+                    // Update ATS Score
+                    const atsScore = (data.ats_analysis.total_score / data.ats_analysis.max_score) * 100;
+                    document.getElementById('atsScore').textContent = `${Math.round(atsScore)}%`;
+                    document.querySelector('.score-circle').style.setProperty('--progress', `${atsScore}deg`);
+                    
+                    // Update ATS Feedback
+                    const feedbackHtml = data.ats_analysis.feedback.map(item => `
+                        <div class="feedback-item">
+                            <span>${item.status}</span>
+                        </div>
+                    `).join('');
+                    document.getElementById('atsFeedback').innerHTML = feedbackHtml;
+                    
+                    // Create Skills Distribution Chart
+                    const ctx = document.getElementById('skillsChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: data.skill_distribution.labels,
+                            datasets: [{
+                                data: data.skill_distribution.data,
+                                backgroundColor: ['#2c3e50', '#34495e', '#7f8c8d']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom'
+                                }
+                            }
+                        }
+                    });
+
+                    // Create Word Cloud
+                    createWordCloud(data.word_cloud_data);
+                    
+                    // Create resume content sections
+                    const resumeSections = `
+                        ${createDetailedSection('Education', data.education)}
+                        ${createDetailedSection('Experience', data.experience)}
+                        ${createDetailedSection('Technical Skills', data.technical_skills)}
+                        ${createDetailedSection('Soft Skills', data.soft_skills)}
+                        ${createDetailedSection('Certifications', data.certifications)}
+                        ${createDetailedSection('Projects', data.projects)}
+                    `;
+                    
+                    resumeContent.innerHTML = resumeSections;
+                })
+                .catch(error => {
+                    loadingOverlay.style.display = "none";
+                    resumeContent.innerHTML = `<div class="error-message">Error analyzing resume: ${error.message}</div>`;
+                });
+        }
+
+        function createDetailedSection(title, items) {
+            if (!items || items.length === 0) return '';
+            return `
+                <div class="section-content">
+                    <div class="section-title">${title}</div>
+                    ${items.map(item => `
+                        <div class="section-item">
+                            ${item}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // Close modal when clicking the X or outside the modal
+        document.querySelector('.close').onclick = function() {
+            document.getElementById('analysisModal').style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('analysisModal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        // Add the createWordCloud function
+        function createWordCloud(words) {
+            const width = document.getElementById('wordCloud').offsetWidth;
+            const height = 300;
+
+            // Clear previous word cloud
+            d3.select("#wordCloud").selectAll("*").remove();
+
+            const layout = d3.layout.cloud()
+                .size([width, height])
+                .words(words)
+                .padding(5)
+                .rotate(() => 0)
+                .fontSize(d => Math.sqrt(d.value) * 5)
+                .on("end", draw);
+
+            layout.start();
+
+            function draw(words) {
+                d3.select("#wordCloud")
+                    .append("svg")
+                    .attr("width", width)
+                    .attr("height", height)
+                    .append("g")
+                    .attr("transform", `translate(${width/2},${height/2})`)
+                    .selectAll("text")
+                    .data(words)
+                    .enter()
+                    .append("text")
+                    .style("font-size", d => `${d.size}px`)
+                    .style("fill", () => `hsl(${Math.random() * 360}, 70%, 50%)`)
+                    .attr("text-anchor", "middle")
+                    .attr("transform", d => `translate(${d.x},${d.y})rotate(${d.rotate})`)
+                    .text(d => d.text);
+            }
+        }
+    </script>
+</body>
+
+</html>

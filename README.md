@@ -4,7 +4,9 @@ The **Resume Parser NLP Project** is a smart application designed to extract and
 
 
 ![Screenshot 2025-05-29 094821](https://github.com/user-attachments/assets/b449c3c3-114c-41e6-90c1-4e9e25fca199)
+
 ![Screenshot 2025-05-29 095023](https://github.com/user-attachments/assets/abba6b3a-b611-4284-ac66-003bbd64e79a)
+
 ![Screenshot 2025-05-29 095031](https://github.com/user-attachments/assets/75fdc48d-5cec-4f9e-866b-069c7cdb7345)
 
 

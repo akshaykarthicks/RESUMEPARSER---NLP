@@ -6,6 +6,9 @@ import os
 from werkzeug.utils import secure_filename
 from collections import Counter
 import json
+import logging
+from concurrent.futures import ThreadPoolExecutor
+import difflib
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'  # Define the directory to store uploaded files
@@ -18,8 +21,16 @@ ALLOWED_EXTENSIONS = {'pdf'}
 PHONE_REG = re.compile(r'[\+$$]?[1-9][0-9 .\-\($$]{8,}[0-9]')
 EMAIL_REG = re.compile(r'[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z]+')
 
-# Load the English NLP model
-nlp = spacy.load("en_core_web_sm")
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+
+# Load the English NLP model once and cache it
+_nlp = None
+def get_nlp():
+    global _nlp
+    if _nlp is None:
+        _nlp = spacy.load("en_core_web_sm")
+    return _nlp
 
 # Function to check allowed file types
 def allowed_file(filename):
@@ -30,7 +41,7 @@ def extract_text_from_pdf(pdf_path):
     try:
         return extract_text(pdf_path)
     except Exception as e:
-        print(f"Error extracting text from {pdf_path}: {str(e)}")
+        logging.error(f"Error extracting text from {pdf_path}: {str(e)}")
         return ""
 
 # Function to extract phone numbers
@@ -48,7 +59,7 @@ def extract_emails(resume_text):
 
 # Function to extract names using proper noun detection
 def extract_name(resume_text):
-    doc = nlp(resume_text)
+    doc = get_nlp()(resume_text)
     person = [token.text for token in doc if token.pos_ == 'PROPN']
     if len(person) >= 2:
         return ' '.join(person[:2])
@@ -56,7 +67,7 @@ def extract_name(resume_text):
 
 # Function to extract skills based on keywords
 def extract_skills(resume_text):
-    doc = nlp(resume_text)
+    doc = get_nlp()(resume_text)
     skills = []
     skill_keywords = ['python', 'flask', 'nodejs', 'html', 'css', 'js', 'c/c++', 'java', 
                       'machine learning', 'tamil', 'data analysis', 'communication', 
@@ -65,7 +76,7 @@ def extract_skills(resume_text):
     for token in doc:
         if token.text.lower() in skill_keywords:
             skills.append(token.text)
-    return list(set(skills))  # Return unique skills
+    return list(set(skills))
 
 # Function to search keyword in all uploaded PDFs
 def search_keyword_in_pdfs(directory, query):
@@ -84,7 +95,6 @@ def search_keyword_in_pdfs(directory, query):
                     name = filename  # Use filename as fallback if no name is extracted
                 result.append(name)
     return list(set(result))  # Return unique names
- # Return unique names
 
 # Add new function for detailed analysis
 def perform_detailed_analysis(text):
@@ -111,7 +121,7 @@ def perform_detailed_analysis(text):
 
 def extract_education(text):
     education_keywords = ['Bachelor', 'Master', 'PhD', 'B.Tech', 'M.Tech', 'B.E.', 'M.E.', 'BSc', 'MSc']
-    doc = nlp(text)
+    doc = get_nlp()(text)
     education = []
     
     # Split text into lines for better analysis
@@ -366,11 +376,29 @@ def calculate_profile_completeness(text):
     
     return round((completed_sections / total_sections) * 100)
 
+# Efficient batch PDF processing
+def process_pdf_file(pdf_file, upload_folder):
+    filename = secure_filename(pdf_file.filename)
+    pdf_path = os.path.join(upload_folder, filename)
+    pdf_file.save(pdf_path)
+    txt = extract_text_from_pdf(pdf_path)
+    name = extract_name(txt)
+    emails = extract_emails(txt)
+    phone_number = extract_phone_number(txt)
+    skills = extract_skills(txt)
+    return {
+        'name': name,
+        'emails': emails,
+        'phone_number': phone_number,
+        'skills': skills,
+        'filename': filename
+    }
+
 # Route to handle uploads and analysis
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
-        os.makedirs(app.config['UPLOAD_FOLDER'])  # Create the uploads directory if it doesn't exist
+        os.makedirs(app.config['UPLOAD_FOLDER'])
 
     results = []
     result_from_chat = []
@@ -381,28 +409,10 @@ def index():
             flash('No file part')
             return redirect(request.url)
 
-        uploaded_files = request.files.getlist("pdf_files")  # Get list of uploaded files
-
-        for pdf_file in uploaded_files:
-            if pdf_file and allowed_file(pdf_file.filename):
-                filename = secure_filename(pdf_file.filename)
-                pdf_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                pdf_file.save(pdf_path)
-
-                txt = extract_text_from_pdf(pdf_path)
-
-                name = extract_name(txt)
-                emails = extract_emails(txt)
-                phone_number = extract_phone_number(txt)
-                skills = extract_skills(txt)
-
-                results.append({
-                    'name': name,
-                    'emails': emails,
-                    'phone_number': phone_number,
-                    'skills': skills,
-                    'filename': filename
-                })
+        uploaded_files = request.files.getlist("pdf_files")
+        # Process PDFs in parallel for efficiency
+        with ThreadPoolExecutor() as executor:
+            results = list(executor.map(lambda pdf: process_pdf_file(pdf, app.config['UPLOAD_FOLDER']), uploaded_files if uploaded_files else []))
 
         # Keyword search
         query = request.form.get('query')
@@ -434,13 +444,126 @@ def clear_uploads():
     # Redirect back to the index page after clearing uploads
     return redirect(url_for('index'))
 
-# Modify the index route to handle detailed analysis
+# Improved name extraction using spaCy NER
+def extract_name_ner(resume_text):
+    doc = get_nlp()(resume_text)
+    for ent in doc.ents:
+        if ent.label_ == 'PERSON':
+            return ent.text
+    return extract_name(resume_text)  # fallback
+
+# Improved education extraction using NER and keywords
+def extract_education_ner(text):
+    doc = get_nlp()(text)
+    education_keywords = ['Bachelor', 'Master', 'PhD', 'B.Tech', 'M.Tech', 'B.E.', 'M.E.', 'BSc', 'MSc', 'degree', 'university', 'college']
+    education = []
+    for ent in doc.ents:
+        if ent.label_ in ['ORG', 'GPE'] and any(k.lower() in ent.text.lower() for k in education_keywords):
+            education.append(ent.text)
+    # Fallback to keyword search
+    education += [line.strip() for line in text.split('\n') if any(keyword in line for keyword in education_keywords)]
+    return list(set(education))
+
+# Improved experience extraction using NER and date parsing
+def extract_experience_ner(text):
+    doc = get_nlp()(text)
+    experience_keywords = ['experience', 'work', 'employment', 'job', 'position', 'intern', 'company']
+    experience = []
+    for ent in doc.ents:
+        if ent.label_ == 'ORG' and any(k in ent.sent.text.lower() for k in experience_keywords):
+            experience.append(ent.sent.text.strip())
+    # Fallback to keyword search
+    lines = text.split('\n')
+    for line in lines:
+        if any(keyword in line.lower() for keyword in experience_keywords):
+            experience.append(line.strip())
+    return list(set(experience))
+
+# Fuzzy matching for skills and certifications
+def fuzzy_match_skills(text, skill_keywords, threshold=0.8):
+    words = set(re.findall(r'\b\w+\b', text.lower()))
+    found = set()
+    for skill in skill_keywords:
+        matches = difflib.get_close_matches(skill, words, n=1, cutoff=threshold)
+        if matches:
+            found.add(skill)
+    return list(found)
+
+def extract_skills_fuzzy(text):
+    skill_keywords = ['python', 'flask', 'nodejs', 'html', 'css', 'js', 'c/c++', 'java', 
+                      'machine learning', 'tamil', 'data analysis', 'communication', 
+                      'project management', 'teamwork', 'problem solving', 'negotiation skills', 
+                      'opencv', 'web developer', 'sql', 'react', 'angular', 'docker', 'kubernetes', 'aws', 'azure', 'git', 'linux', 'artificial intelligence', 'devops', 'cloud computing', 'database', 'api', 'rest', 'graphql']
+    return fuzzy_match_skills(text, skill_keywords)
+
+def extract_certifications_fuzzy(text):
+    cert_keywords = ['certification', 'certificate', 'certified', 'diploma', 'aws certified', 'pmp', 'scrum master', 'google certified', 'azure certified']
+    return fuzzy_match_skills(text, cert_keywords, threshold=0.7)
+
+# Project extraction using regex and keywords
+def extract_projects_advanced(text):
+    project_keywords = ['project', 'developed', 'implemented', 'created', 'built', 'designed']
+    lines = text.split('\n')
+    projects = []
+    for line in lines:
+        if any(keyword in line.lower() for keyword in project_keywords):
+            projects.append(line.strip())
+    return list(set(projects))
+
+# Summary/profile extraction
+def extract_summary_section(text):
+    summary_keywords = ['summary', 'profile', 'about me', 'objective']
+    lines = text.split('\n')
+    summary = []
+    capture = False
+    for line in lines:
+        if any(k in line.lower() for k in summary_keywords):
+            capture = True
+        elif capture and (line.strip() == '' or len(summary) > 5):
+            break
+        if capture:
+            summary.append(line.strip())
+    return ' '.join(summary).strip() if summary else None
+
+# Improved ATS analysis with job description matching
+def calculate_ats_score_advanced(text, job_description=None):
+    # If job_description is provided, compare skills/keywords
+    ats = calculate_ats_score(text)
+    if job_description:
+        job_skills = extract_skills_fuzzy(job_description)
+        resume_skills = extract_skills_fuzzy(text)
+        match_count = len(set(job_skills) & set(resume_skills))
+        ats['job_match_score'] = round(100 * match_count / max(1, len(job_skills)), 2)
+        ats['matched_skills'] = list(set(job_skills) & set(resume_skills))
+    return ats
+
+# Improved detailed analysis route
 @app.route('/detailed_analysis/<filename>')
 def detailed_analysis(filename):
     try:
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         text = extract_text_from_pdf(file_path)
-        analysis = perform_detailed_analysis(text)
+        job_description = request.args.get('job_description', None)
+        analysis = {
+            'name': extract_name_ner(text),
+            'summary': extract_summary_section(text),
+            'education': extract_education_ner(text),
+            'experience': extract_experience_ner(text),
+            'certifications': extract_certifications_fuzzy(text),
+            'languages': extract_languages(text),
+            'technical_skills': extract_skills_fuzzy(text),
+            'soft_skills': extract_soft_skills(text),
+            'projects': extract_projects_advanced(text),
+            'ats_analysis': calculate_ats_score_advanced(text, job_description),
+            'word_cloud_data': generate_word_cloud_data(text),
+            'skill_distribution': calculate_skill_distribution(text),
+            'summary_stats': {
+                'total_experience_years': calculate_total_experience(text),
+                'education_level': determine_education_level(text),
+                'skill_match_score': calculate_skill_match_score(text),
+                'profile_completeness': calculate_profile_completeness(text)
+            }
+        }
         return analysis
     except Exception as e:
         return {"error": str(e)}, 400
